@@ -1,0 +1,130 @@
+# Feature Engineering Configuration
+# Data Minimization: Only create necessary features for the research purpose
+
+feature_engineering:
+  # Allowed feature categories (Purpose Limitation)
+  allowed_categories:
+    - price_actions
+    - technical_indicators
+    - volatility_measures
+    - time_features
+  
+  # Prohibited feature categories
+  prohibited_categories:
+    - sentiment_features
+    - social_media_features
+    - alternative_data_features
+    - pii_derived_features
+  
+  # Price-based features
+  price_features:
+    returns: true
+    log_returns: true
+    returns_lag1: true
+    returns_lag2: true
+    returns_lag3: true
+    high_low_range: true # (high - low) / close
+  
+  # Technical indicators (Limited set for Data Minimization)
+  technical_indicators:
+    momentum:
+      rsi:
+        period: 14
+        enabled: true
+      macd:
+        fast_period: 12
+        slow_period: 26
+        signal_period: 9
+        enabled: true
+    
+    volatility:
+      atr:
+        period: 14
+        enabled: true
+      bollinger_bands:
+        period: 20
+        std_dev: 2
+        enabled: true
+    
+    trend:
+      sma:
+        periods: [20, 50, 200]
+        enabled: true
+      ema:
+        periods: [12, 26]
+        enabled: false # Disabled to minimize features
+    
+    # Disabled indicators (Data Minimization)
+    disabled_indicators:
+      - stochastic
+      - williams_r
+      - cci
+      - adx
+  
+  # Volatility features
+  volatility:
+    realized_volatility:
+      window: 20
+      enabled: true
+    parkinson_volatility:
+      window: 20
+      enabled: true
+    garman_klass_volatility:
+      window: 20
+      enabled: true
+  
+  # Time features (Limited for purpose)
+  time_features:
+    hour_of_day: true
+    day_of_week: true
+    month_of_year: false # Disabled - not needed for microstructure
+    is_weekend: true
+  
+  # Feature transformations
+  transformations:
+    normalization:
+      method: "standard" # standard, minmax, robust
+      enabled: true
+    
+    scaling:
+      scale_returns: true
+      scale_volume: true
+    
+    # Ethical constraints on transformations
+    constraints:
+      no_pii_encoding: true
+      no_sensitive_binning: true
+      preserve_privacy: true
+  
+  # Output specifications
+  output:
+    format: "parquet"
+    compression: "snappy"
+    
+    # Column naming conventions
+    naming:
+      prefix_returns: "ret_"
+      prefix_technical: "ta_"
+      prefix_volatility: "vol_"
+      prefix_time: "time_"
+    
+    # Data type specifications
+    dtypes:
+      price: "float32"
+      returns: "float32"
+      indicators: "float32"
+      time_features: "int8"
+    
+  # Validation rules for engineered features
+  validation:
+    max_feature_count: 25 # Purpose limitation
+    min_correlation_threshold: 0.95 # Remove highly correlated
+    variance_threshold: 0.01 # Remove low variance
+    ethical_compliance_check: true
+  
+  # Feature selection (post-engineering)
+  feature_selection:
+    method: "mutual_info" # mutual_info, correlation, importance
+    n_features_to_select: 15
+    remove_correlated: true
+    correlation_threshold: 0.8

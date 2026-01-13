@@ -1,0 +1,140 @@
+yaml
+
+# Training Configuration with Ethical Enforcement
+
+ 
+
+training:
+
+  epochs: 100
+
+  batch_size: 64
+
+  learning_rate:
+
+    generator: 0.0002
+
+    discriminator: 0.0002
+
+ 
+
+  # Ethical training parameters
+
+  ethical_weight: 0.1  # Weight for ethical constraint loss
+
+  compliance_check_interval: 100  # Check compliance every N batches
+
+ 
+
+# Quantum configuration
+
+quantum:
+
+  n_qubits: 8
+
+  n_layers: 3
+
+  shots: 1000  # For quantum simulation
+
+  backend: "lightning.qubit"  # PennyLane backend
+
+ 
+
+# Data usage tracking
+
+tracking:
+
+  log_data_usage: true
+
+  save_audit_trail: true
+
+  audit_path: "results/audit_trail.json"
+
+ 
+
+  # Purpose limitation enforcement
+
+  permitted_purposes:
+
+    - "model_training"
+
+    - "benchmarking"
+
+    - "adversarial_testing"
+
+ 
+
+  prohibited_actions:
+
+    - "data_repurposing"
+
+    - "commercial_use"
+
+    - "redistribution"
+
+ 
+
+# Synthetic data constraints
+
+synthetic_constraints:
+
+  output_bounds: [-0.1, 0.1]
+
+  max_volatility: 0.05
+
+  max_attempts_per_sample: 3
+
+  anomaly_detection:
+
+    method: "isolation_forest"
+
+    contamination: 0.01
+
+    random_state: 42
+
+ 
+
+# Validation
+
+validation:
+
+  metrics:
+
+    - "accuracy"
+
+    - "f1_score"
+
+    - "adversarial_robustness"
+
+    - "ethical_compliance"
+
+ 
+
+  test_size: 0.2
+
+  random_state: 42
+
+  cross_validation_folds: 5
+
+ 
+
+# Logging
+
+logging:
+
+  use_wandb: false
+
+  wandb_project: "qgan-ethical-finance"
+
+  save_checkpoints: true
+
+  checkpoint_dir: "checkpoints/"
+
+  log_interval: 10
+
+This repository structure implements all three ethical principles:
+
+Focused Data Collection: src/data/acquisition.py only collects permitted data
+Synthetic Data Scoping: src/quantum/qgan.py has bounded generation and guardrails
+Clear Research Purpose: src/training/ethical_trainer.py tracks and enforces usage limits
+ 

@@ -1,0 +1,129 @@
+#Model Configuration with Ethical Constraints
+
+baseline_models:
+  # Random Forest
+  random_forest:
+    n_estimators: 100
+    max_depth: 10
+    min_samples_split: 20
+    min_samples_leaf: 10
+    random_state: 42
+    # Ethical: Limited depth for explainability
+    max_features: "sqrt"
+  
+  # XGBoost
+  xgboost:
+    n_estimators: 100
+    max_depth: 6
+    learning_rate: 0.1
+    subsample: 0.8
+    colsample_bytree: 0.8
+    random_state: 42
+    # Ethical: Regularization to prevent overfitting
+    reg_alpha: 0.1
+    reg_lambda: 1.0
+  
+  # LightGBM
+  lightgbm:
+    n_estimators: 100
+    max_depth: 6
+    learning_rate: 0.1
+    num_leaves: 31
+    random_state: 42
+    # Ethical: Feature fraction for diversity
+    feature_fraction: 0.8
+  
+  # Financial LLM (Simplified)
+  financial_llm:
+    input_dim: 10
+    hidden_dim: 64
+    num_layers: 2
+    num_heads: 4
+    dropout: 0.1
+    learning_rate: 0.001
+    batch_size: 64
+    epochs: 50
+    # Ethical: Small model for energy efficiency
+    model_size: "small"
+
+# QGAN Configuration (from previous)
+qgan:
+  n_qubits: 8
+  n_layers: 3
+  latent_dim: 10
+  learning_rate: 0.0002
+  beta1: 0.5
+  beta2: 0.999
+  
+  # Ethical constraints
+  ethical_constraints:
+    output_bounds: [-0.1, 0.1]
+    max_training_steps: 10000
+    energy_budget: 100 # kWh limit
+    privacy_budget: 1.0 # Differential privacy
+
+# Training Configuration
+training:
+  batch_size: 64
+  validation_split: 0.2
+  early_stopping_patience: 10
+  checkpoint_frequency: 100
+  
+  # Purpose-limited training
+  max_training_time: "24:00:00" # 24 hours max
+  data_usage_limit: 1000000 # Max samples
+  
+  # Ethical training practices
+  energy_monitoring: true
+  carbon_footprint_tracking: true
+  reproducible_seeds: true
+
+# Evaluation Metrics
+evaluation:
+  primary_metrics:
+    - "accuracy"
+    - "f1_score"
+    - "precision"
+    - "recall"
+    - "auc_roc"
+  
+  ethical_metrics:
+    - "fairness_score"
+    - "bias_score"
+    - "privacy_score"
+    - "explainability_score"
+    - "energy_efficiency"
+  
+  # Statistical significance
+  statistical_tests:
+    - "mcnemar_test"
+    - "wilcoxon_signed_rank"
+    confidence_level: 0.95
+  
+  # Comparison benchmarks
+  comparison:
+    baseline_models: ["RandomForest", "XGBoost", "LightGBM", "FinancialLLM"]
+    significance_threshold: 0.05
+    min_improvement: 0.01 # 1% minimum improvement
+
+# Model Saving and Versioning
+model_management:
+  save_format: "pytorch" # or "onnx", "pickle"
+  versioning: true
+  metadata_included: true
+  
+  # Ethical model cards
+  model_card:
+    include: true
+    required_sections:
+      - "intended_use"
+      - "limitations"
+      - "ethical_considerations"
+      - "training_data"
+      - "evaluation_results"
+  
+  # Model deployment constraints
+  deployment:
+    allowed_environments: ["research", "testing"]
+    prohibited_uses: ["trading", "commercial", "production"]
+    expiration_date: "2025-12-31" # Research purpose limitation
