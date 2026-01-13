@@ -1,0 +1,148 @@
+
+**configs/data_config.yaml**
+
+```yaml
+
+# Data Minimization Configuration
+
+# Strictly limited to necessary variables only
+
+ 
+
+data_sources:
+
+  forex:
+
+    symbol: "EURUSD=X"
+
+    start_date: "2015-01-01"
+
+    end_date: "2024-12-31"
+
+    interval: "1d"
+
+    # OHLC only - no extraneous data
+
+    columns: ["Open", "High", "Low", "Close", "Volume"]
+
+ 
+
+  # Minimal technical indicators
+
+  technical_indicators:
+
+    momentum:
+
+      - rsi: 14
+
+      - macd: {"fast": 12, "slow": 26, "signal": 9}
+
+    volatility:
+
+      - atr: 14
+
+      - bollinger_bands: {"window": 20, "std": 2}
+
+    trend:
+
+      - sma: 50
+
+      - sma: 200
+
+ 
+
+  # Defined macroeconomic factors only
+
+  macroeconomic:
+
+    sources:
+
+      - fred: ["DEXUSEU", "DTWEXBGS", "DGS10", "DGS2"]
+
+      - ecb: ["EST.B.EU000A2X2A25.WT", "EST.B.EU000A2X2A25.Z5"]
+
+   
+
+    # Strict exclusion list
+
+    excluded_data:
+
+      - social_media
+
+      - news_sentiment
+
+      - alternative_data
+
+      - pii_related
+
+      - proprietary_indicators
+
+ 
+
+# Synthetic Data Scoping
+
+synthetic_data:
+
+  purpose: "market_microstructure_patterns_only"
+
+  constraints:
+
+    output_bounds:
+
+      min: -0.1  # Max 10% daily move
+
+      max: 0.1
+
+    feature_constraints:
+
+      volatility: [0.001, 0.05]
+
+      autocorrelation: [-0.2, 0.2]
+
+   
+
+  # Controls against sensitive generation
+
+  guardrails:
+
+    anomaly_detection_threshold: 0.95
+
+    max_attempts_per_sample: 3
+
+    discard_out_of_bounds: true
+
+ 
+
+# Data usage covenant
+
+data_usage:
+
+  permitted_purposes:
+
+    - model_training
+
+    - benchmarking
+
+    - adversarial_testing
+
+ 
+
+  prohibited_purposes:
+
+    - repurposing
+
+    - commercial_use
+
+    - redistribution
+
+    - sensitive_inference
+
+ 
+
+  retention_policy:
+
+    real_data: "encrypted_storage"
+
+    synthetic_data: "ephemeral_only"
+
+    intermediate_results: "30_days"
