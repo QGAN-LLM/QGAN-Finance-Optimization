@@ -1,4 +1,3 @@
-  python
 
 """
 
@@ -188,7 +187,7 @@ class EthicalDataCollector:
 
         print("Fetching strictly defined macroeconomic factors...")
 
-        # Implementation would use fredapi or similar
+        # Implementation would use FredAPI or similar
 
         return pd.DataFrame()
 
