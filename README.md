@@ -67,4 +67,3 @@ Synthetic Data Scoping: Bounded QGAN generation
 Clear Research Purpose: No data repurposing
 Citation
 
-If using this code, please cite our work on Quantum GANs for financial AI optimization.
