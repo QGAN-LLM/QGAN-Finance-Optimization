@@ -1,7 +1,3 @@
-# QGAN-Finance-Optimization
-markdown
-
-# QGAN-Finance-Optimization
 
  
 
@@ -11,7 +7,7 @@ markdown
 
 ### Overview
 
-This repository implements a Quantum Generative Adversarial Network (QGAN) framework for optimizing Generative AI Large Language Models in capital market applications, with strict adherence to Data Minimization and Purpose Limitation principles.
+This repository implements a Quantum Generative Adversarial Network (QGAN) framework for optimizing Generative AI Large Language Models in capital market applications, with strict adherence to the principles of data minimization and purpose limitation.
 
  
 
