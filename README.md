@@ -3,7 +3,21 @@
 
 ## Quantum Generative Adversarial Networks for Financial LLM Optimization
 
- 
+ # Quantum GAN for LLM Accuracy Optimization in Capital Markets
+
+## Overview
+This repository contains code for the doctoral dissertation research on "Cybersecurity theory: Quantum Generative Adversarial Networks (QGAN) for Generative AI (GenAI) LLMs accuracy optimization in the capital market."
+
+## Quick Start
+
+### 1. Environment Setup
+```bash
+# Using conda (recommended)
+conda env create -f environment.yml
+conda activate qgan-llm-research
+
+# Or using pip
+pip install -e .[dev]
 
 ### Overview
 
