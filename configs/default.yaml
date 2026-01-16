@@ -1,0 +1,116 @@
+# Default configuration for QGAN-LLM cybersecurity research
+
+# Data configuration
+data:
+  currency_pair: "EURUSD"
+  start_date: "2010-01-01"
+  end_date: "2025-12-31"
+  data_source: "yfinance"  # Options: yfinance, dukascopy, trader_made
+  granularity: "1min"  # 1min, 5min, 1H, 1D
+  
+  # Feature engineering
+  technical_indicators:
+    - sma_20
+    - sma_50
+    - rsi
+    - macd
+    - bollinger_upper
+    - bollinger_lower
+    - atr
+    - stochastic_k
+  
+  # Volatility regimes
+  volatility_regimes:
+    - low
+    - medium
+    - high
+  
+  vix_thresholds:
+    low: 15.0
+    medium: 30.0
+    high: 45.0
+  
+  # Data splits
+  train_split: 0.7  # 2010-2021
+  val_split: 0.15   # 2022-2023
+  test_split: 0.15  # 2024-2025
+
+# Quantum configuration
+quantum:
+  n_qubits: 4
+  circuit_depth: 3
+  entanglement_type: "linear"  # Options: linear, full, circular
+  encoding_type: "angle"  # Options: angle, amplitude, basis
+  
+  # Noise injection
+  noise_model: "depolarizing"  # Options: None, depolarizing, amplitude_damping
+  noise_probability: 0.01
+  
+  # Training parameters
+  generator_lr: 0.001
+  discriminator_lr: 0.0002
+  batch_size: 32
+  n_epochs: 100
+  
+  # Hardware/Simulator
+  backend: "default.qubit"  # PennyLane device
+  shots: null  # null for analytic
+
+# Classical configuration
+classical:
+  # Discriminator
+  discriminator_hidden_dims: [128, 64, 32]
+  discriminator_dropout: 0.2
+  
+  # LSTM Baseline
+  lstm_hidden_size: 128
+  lstm_num_layers: 2
+  
+  # LLM Integration
+  llm_model: "gpt-3.5-turbo"
+  fine_tuning: true
+  max_tokens: 500
+
+# Attack configuration
+attack:
+  attack_types:
+    - fgsm
+    - pgd
+  
+  epsilon: 0.1
+  pgd_steps: 10
+  pgd_step_size: 0.01
+  
+  # FIN-ATT&CK threat scenarios
+  threat_scenarios:
+    - id: "TA02.001"
+      name: "Order Book Spoofing"
+      description: "Inject fake orders to manipulate price"
+    - id: "TA07.003"
+      name: "Sentiment Poisoning"
+      description: "Manipulate NLP sentiment analysis"
+
+# Evaluation configuration
+evaluation:
+  # FINSEC-QBENCH metrics
+  metrics:
+    - rmse
+    - mae
+    - asr
+    - fpr
+    - latency
+    - fid
+    - cqr
+    - talis
+  
+  # Statistical significance
+  alpha: 0.05
+  n_bootstrap: 1000
+  
+  # Quantum metrics
+  tomography_method: "mle"  # Options: mle, linear, bayesian
+  n_tomography_shots: 10000
+
+# Experiment configuration
+seed: 42
+project_name: "qgan_llm_cybersecurity"

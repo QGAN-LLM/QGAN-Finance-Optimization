@@ -6,25 +6,7 @@ __pycache__/
 # C extensions
 *.so
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -205,3 +187,76 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+#add
+
+# Data
+data/raw/
+data/processed/
+data/synthetic/
+*.csv
+*.parquet
+*.feather
+
+# Models and checkpoints
+models/
+checkpoints/
+*.pth
+*.pt
+*.h5
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+# Distribution / packaging
+
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter
+.ipynb_checkpoints
+
+# MLFlow
+mlruns/
+
+# Weights & Biases
+wandb/
+
+# API Keys
+*.key
+*.pem

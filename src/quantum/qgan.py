@@ -1,411 +1,351 @@
-Quantum Generative Adversarial Network with Ethical Constraints
-
-Implements Synthetic Data Scoping principle
-
 """
-
- 
-
-import torch
-
-import torch.nn as nn
-
+Quantum Generative Adversarial Network implementation.
+"""
 import pennylane as qml
+from pennylane import numpy as np
+import torch
+import torch.nn as nn
+from typing import Tuple, Dict, Any, Optional
+import logging
+from datetime import datetime
 
-import numpy as np
+from .circuits import VQCGenerator
 
-from typing import Tuple, Optional
+logger = logging.getLogger(__name__)
 
- 
-
-class EthicalQGANGenerator(nn.Module):
-
-    """
-
-    Quantum Generator with purpose-limited output
-
-    Trained SOLELY to replicate market microstructure patterns
-
-    """
-
-   
-
-    def __init__(self,
-
-                 n_qubits: int = 8,
-
-                 n_layers: int = 3,
-
-                 output_bounds: Tuple[float, float] = (-0.1, 0.1)):
-
-        super().__init__()
-
-       
-
-        self.n_qubits = n_qubits
-
-        self.n_layers = n_layers
-
-        self.output_bounds = output_bounds
-
-       
-
-        # Quantum device with constraint-aware ansatz
-
-        dev = qml.device("default.qubit", wires=n_qubits)
-
-       
-
-        @qml.qnode(dev, interface="torch")
-
-        def quantum_circuit(inputs, weights):
-
-            """Purpose-limited quantum circuit"""
-
-            # Encode only the necessary information
-
-            for i in range(n_qubits):
-
-                qml.RY(inputs[i % len(inputs)], wires=i)
-
-           
-
-            # Hardware-efficient ansatz for market patterns
-
-            for layer in range(n_layers):
-
-                for i in range(n_qubits):
-
-                    qml.RZ(weights[layer, i, 0], wires=i)
-
-                    qml.RY(weights[layer, i, 1], wires=i)
-
-                    qml.RZ(weights[layer, i, 2], wires=i)
-
-               
-
-                # Entanglement for microstructure patterns only
-
-                for i in range(n_qubits - 1):
-
-                    qml.CNOT(wires=[i, i + 1])
-
-           
-
-            # Measure in basis relevant to financial patterns
-
-            return [qml.expval(qml.PauliZ(i)) for i in range(n_qubits)]
-
-       
-
-        self.quantum_circuit = quantum_circuit
-
-        self.weights = nn.Parameter(
-
-            torch.randn(n_layers, n_qubits, 3) * 0.01
-
+class QGANModel:
+    """Quantum Generative Adversarial Network for financial data generation."""
+    
+    def __init__(self, 
+                 quantum_config: Dict[str, Any],
+                 classical_config: Dict[str, Any],
+                 latent_dim: int = 10):
+        """
+        Initialize QGAN model.
+        
+        Args:
+            quantum_config: Configuration for quantum components
+            classical_config: Configuration for classical components
+            latent_dim: Dimension of latent space
+        """
+        self.quantum_config = quantum_config
+        self.classical_config = classical_config
+        self.latent_dim = latent_dim
+        
+        # Initialize components
+        self.generator = self._init_generator()
+        self.discriminator = self._init_discriminator()
+        
+        # Optimizers
+        self.g_optimizer = torch.optim.Adam(
+            self.generator.parameters(),
+            lr=quantum_config.get('generator_lr', 0.001)
         )
-
-       
-
-        # Classical post-processing with bounds
-
-        self.post_process = nn.Sequential(
-
-            nn.Linear(n_qubits, 32),
-
-            nn.Tanh(),  # Bounded activation
-
-            nn.Linear(32, 16),
-
-            nn.Tanh(),  # Bounded activation
-
-            nn.Linear(16, 1)
-
+        self.d_optimizer = torch.optim.Adam(
+            self.discriminator.parameters(),
+            lr=quantum_config.get('discriminator_lr', 0.0002)
         )
-
-   
-
-    def forward(self, z: torch.Tensor) -> torch.Tensor:
-
-        """Generate purpose-scoped synthetic data"""
-
-        # Ensure input is within ethical bounds
-
-        z = torch.clamp(z, -1, 1)
-
-       
-
-        # Quantum computation
-
-        quantum_output = self.quantum_circuit(z, self.weights)
-
-        quantum_features = torch.stack(quantum_output, dim=-1)
-
-       
-
-        # Classical processing with constraints
-
-        raw_output = self.post_process(quantum_features)
-
-       
-
-        # Apply output bounds for ethical scoping
-
-        min_val, max_val = self.output_bounds
-
-        scaled_output = torch.sigmoid(raw_output) * (max_val - min_val) + min_val
-
-       
-
-        return scaled_output
-
-   
-
-    def ethical_guardrail(self, generated_data: torch.Tensor) -> Tuple[torch.Tensor, bool]:
-
-        """
-
-        Prevent generation of sensitive/proprietary patterns
-
-        Returns filtered data and compliance flag
-
-        """
-
-        # Check for PII-like patterns (placeholder implementation)
-
-        # In practice, this would use anomaly detection
-
-        mean_val = generated_data.mean().item()
-
-        std_val = generated_data.std().item()
-
-       
-
-        # Simple bounds checking - replace with proper anomaly detection
-
-        is_compliant = (
-
-            abs(mean_val) < 0.05 and  # Not too extreme
-
-            std_val < 0.03 and  # Not too volatile
-
-            not torch.any(torch.isnan(generated_data))
-
-        )
-
-       
-
-        if not is_compliant:
-
-            # Apply correction to stay within ethical bounds
-
-            generated_data = torch.clamp(
-
-                generated_data,
-
-                self.output_bounds[0],
-
-                self.output_bounds[1]
-
-            )
-
-       
-
-        return generated_data, is_compliant
-
- 
-
- 
-
-class EthicalQGANDiscriminator(nn.Module):
-
-    """
-
-    Classical Discriminator that also acts as ethical sentinel
-
-    """
-
-   
-
-    def __init__(self, input_dim: int = 10):
-
-        super().__init__()
-
-       
-
-        self.ethical_sentinel = nn.Sequential(
-
-            nn.Linear(input_dim, 64),
-
-            nn.LeakyReLU(0.2),
-
-            nn.Linear(64, 32),
-
-            nn.LeakyReLU(0.2),
-
-            # Output: [real/fake probability, ethical compliance score]
-
-            nn.Linear(32, 2),
-
-            nn.Sigmoid()
-
-        )
-
-   
-
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-
-        """
-
-        Returns:
-
-        - authenticity_score: probability of being real data
-
-        - ethical_score: probability of being ethically compliant
-
-        """
-
-        output = self.ethical_sentinel(x)
-
-        authenticity_score = output[:, 0:1]
-
-        ethical_score = output[:, 1:2]
-
-       
-
-        return authenticity_score, ethical_score
-
- 
-
- 
-
-class EthicalQGAN(nn.Module):
-
-    """
-
-    Complete Ethical QGAN framework with all guardrails
-
-    """
-
-   
-
-    def __init__(self, config: dict):
-
-        super().__init__()
-
-       
-
-        self.generator = EthicalQGANGenerator(
-
-            n_qubits=config.get('n_qubits', 8),
-
-            output_bounds=config.get('output_bounds', (-0.1, 0.1))
-
-        )
-
-       
-
-        self.discriminator = EthicalQGANDiscriminator(
-
-            input_dim=config.get('input_dim', 10)
-
-        )
-
-       
-
-        self.anomaly_detector = self._setup_anomaly_detector()
-
-       
-
-    def _setup_anomaly_detector(self):
-
-        """Setup for detecting sensitive pattern generation"""
-
-        # Placeholder for isolation forest or one-class SVM
-
-        return None
-
-   
-
-    def generate_ethical_samples(self, n_samples: int,
-
-                                device: str = 'cpu') -> torch.Tensor:
-
-        """
-
-        Generate synthetic data with ethical constraints
-
-        """
-
-        z = torch.randn(n_samples, 1).to(device)
-
-       
-
-        with torch.no_grad():
-
-            raw_generated = self.generator(z)
-
-            ethical_checked, is_compliant = self.generator.ethical_guardrail(raw_generated)
-
-           
-
-            # Additional anomaly detection
-
-            if self.anomaly_detector:
-
-                # Convert to numpy for scikit-learn detectors
-
-                generated_np = ethical_checked.cpu().numpy()
-
-                # anomaly_detection would happen here
-
-                pass
-
-       
-
-        if not is_compliant:
-
-            print("⚠️  Ethical guardrail activated - adjusting generated samples")
-
-       
-
-        return ethical_checked
-
-   
-
-    def get_ethical_report(self, generated_data: torch.Tensor) -> dict:
-
-        """
-
-        Generate compliance report for synthetic data
-
-        """
-
-        stats = {
-
-            'mean': generated_data.mean().item(),
-
-            'std': generated_data.std().item(),
-
-            'min': generated_data.min().item(),
-
-            'max': generated_data.max().item(),
-
-            'within_bounds': (
-
-                generated_data.min() >= self.generator.output_bounds[0] and
-
-                generated_data.max() <= self.generator.output_bounds[1]
-
-            ),
-
-            'pii_pattern_detected': False,  # Would be implemented
-
-            'proprietary_pattern_detected': False  # Would be implemented
-
+        
+        # Loss function
+        self.criterion = nn.BCELoss()
+        
+        # Training history
+        self.history = {
+            'g_loss': [],
+            'd_loss': [],
+            'd_real_acc': [],
+            'd_fake_acc': []
         }
+        
+        logger.info(f"Initialized QGAN with {quantum_config['n_qubits']} qubits")
+    
+    def _init_generator(self):
+        """Initialize quantum generator."""
+        return HybridQuantumGenerator(
+            n_qubits=self.quantum_config['n_qubits'],
+            circuit_depth=self.quantum_config['circuit_depth'],
+            entanglement_type=self.quantum_config['entanglement_type'],
+            encoding_type=self.quantum_config['encoding_type'],
+            latent_dim=self.latent_dim,
+            noise_model=self.quantum_config.get('noise_model'),
+            noise_probability=self.quantum_config.get('noise_probability', 0.01)
+        )
+    
+    def _init_discriminator(self):
+        """Initialize classical discriminator."""
+        # Input size depends on generator output
+        input_size = self.quantum_config['n_qubits']
+        hidden_dims = self.classical_config.get('discriminator_hidden_dims', [128, 64, 32])
+        
+        return ClassicalDiscriminator(
+            input_size=input_size,
+            hidden_dims=hidden_dims,
+            dropout=self.classical_config.get('discriminator_dropout', 0.2)
+        )
+    
+    def train(self, 
+              train_data: np.ndarray,
+              val_data: Optional[np.ndarray] = None,
+              epochs: int = 100,
+              batch_size: int = 32,
+              tracker: Optional[Any] = None) -> Dict[str, list]:
+        """
+        Train the QGAN model.
+        
+        Args:
+            train_data: Training data
+            val_data: Validation data (optional)
+            epochs: Number of training epochs
+            batch_size: Batch size
+            tracker: Experiment tracker for logging
+            
+        Returns:
+            Training history
+        """
+        logger.info(f"Starting QGAN training for {epochs} epochs")
+        
+        n_samples = len(train_data)
+        n_batches = n_samples // batch_size
+        
+        for epoch in range(epochs):
+            epoch_g_loss = 0
+            epoch_d_loss = 0
+            epoch_d_real_acc = 0
+            epoch_d_fake_acc = 0
+            
+            # Shuffle data
+            indices = np.random.permutation(n_samples)
+            
+            for batch_idx in range(n_batches):
+                # Get batch
+                batch_indices = indices[batch_idx * batch_size:(batch_idx + 1) * batch_size]
+                real_batch = train_data[batch_indices]
+                
+                # ---------------------
+                # Train Discriminator
+                # ---------------------
+                self.d_optimizer.zero_grad()
+                
+                # Real data
+                real_labels = torch.ones(batch_size, 1)
+                real_output = self.discriminator(torch.tensor(real_batch, dtype=torch.float32))
+                d_real_loss = self.criterion(real_output, real_labels)
+                d_real_acc = (real_output > 0.5).float().mean().item()
+                
+                # Fake data
+                fake_data = self.generator.generate(batch_size)
+                fake_labels = torch.zeros(batch_size, 1)
+                fake_output = self.discriminator(fake_data)
+                d_fake_loss = self.criterion(fake_output, fake_labels)
+                d_fake_acc = (fake_output < 0.5).float().mean().item()
+                
+                # Combined discriminator loss
+                d_loss = d_real_loss + d_fake_loss
+                d_loss.backward()
+                self.d_optimizer.step()
+                
+                # -----------------
+                # Train Generator
+                # -----------------
+                self.g_optimizer.zero_grad()
+                
+                # Generate fake data
+                fake_data = self.generator.generate(batch_size)
+                
+                # Try to fool discriminator
+                misleading_labels = torch.ones(batch_size, 1)
+                g_output = self.discriminator(fake_data)
+                g_loss = self.criterion(g_output, misleading_labels)
+                
+                g_loss.backward()
+                self.g_optimizer.step()
+                
+                # Accumulate metrics
+                epoch_g_loss += g_loss.item()
+                epoch_d_loss += d_loss.item()
+                epoch_d_real_acc += d_real_acc
+                epoch_d_fake_acc += d_fake_acc
+            
+            # Average metrics over batches
+            epoch_g_loss /= n_batches
+            epoch_d_loss /= n_batches
+            epoch_d_real_acc /= n_batches
+            epoch_d_fake_acc /= n_batches
+            
+            # Update history
+            self.history['g_loss'].append(epoch_g_loss)
+            self.history['d_loss'].append(epoch_d_loss)
+            self.history['d_real_acc'].append(epoch_d_real_acc)
+            self.history['d_fake_acc'].append(epoch_d_fake_acc)
+            
+            # Log progress
+            if epoch % 10 == 0:
+                logger.info(
+                    f"Epoch {epoch}/{epochs} | "
+                    f"G Loss: {epoch_g_loss:.4f} | "
+                    f"D Loss: {epoch_d_loss:.4f} | "
+                    f"D Real Acc: {epoch_d_real_acc:.3f} | "
+                    f"D Fake Acc: {epoch_d_fake_acc:.3f}"
+                )
+            
+            # Log to tracker if provided
+            if tracker:
+                tracker.log_metrics({
+                    'g_loss': epoch_g_loss,
+                    'd_loss': epoch_d_loss,
+                    'd_real_acc': epoch_d_real_acc,
+                    'd_fake_acc': epoch_d_fake_acc
+                }, step=epoch)
+            
+            # Early stopping check (simplified)
+            if epoch > 20 and self._check_early_stopping():
+                logger.info(f"Early stopping at epoch {epoch}")
+                break
+        
+        logger.info("QGAN training complete")
+        return self.history
+    
+    def _check_early_stopping(self, patience: int = 10) -> bool:
+        """Check if training should stop early."""
+        if len(self.history['g_loss']) < patience * 2:
+            return False
+        
+        # Check if generator loss hasn't improved
+        recent_losses = self.history['g_loss'][-patience:]
+        min_recent = min(recent_losses)
+        min_overall = min(self.history['g_loss'][:-patience])
+        
+        return min_recent >= min_overall
+    
+    def generate_synthetic(self, n_samples: int = 1000) -> np.ndarray:
+        """
+        Generate synthetic data.
+        
+        Args:
+            n_samples: Number of samples to generate
+            
+        Returns:
+            Synthetic data array
+        """
+        logger.info(f"Generating {n_samples} synthetic samples")
+        return self.generator.generate(n_samples)
+    
+    def get_quantum_state(self) -> np.ndarray:
+        """Get current quantum state for tomography."""
+        return self.generator.get_state()
+    
+    def save(self, filepath: str):
+        """Save model to file."""
+        torch.save({
+            'generator_state_dict': self.generator.state_dict(),
+            'discriminator_state_dict': self.discriminator.state_dict(),
+            'g_optimizer_state_dict': self.g_optimizer.state_dict(),
+            'd_optimizer_state_dict': self.d_optimizer.state_dict(),
+            'history': self.history,
+            'config': {
+                'quantum': self.quantum_config,
+                'classical': self.classical_config
+            }
+        }, filepath)
+        logger.info(f"Model saved to {filepath}")
+    
+    def load(self, filepath: str):
+        """Load model from file."""
+        checkpoint = torch.load(filepath)
+        
+        self.generator.load_state_dict(checkpoint['generator_state_dict'])
+        self.discriminator.load_state_dict(checkpoint['discriminator_state_dict'])
+        self.g_optimizer.load_state_dict(checkpoint['g_optimizer_state_dict'])
+        self.d_optimizer.load_state_dict(checkpoint['d_optimizer_state_dict'])
+        self.history = checkpoint['history']
+        
+        logger.info(f"Model loaded from {filepath}")
 
-       
 
-        return stats
+class HybridQuantumGenerator(nn.Module):
+    """Hybrid quantum-classical generator with latent space."""
+    
+    def __init__(self, n_qubits: int = 4, circuit_depth: int = 3,
+                 entanglement_type: str = "linear", encoding_type: str = "angle",
+                 latent_dim: int = 10, noise_model: Optional[str] = None,
+                 noise_probability: float = 0.01):
+        super().__init__()
+        
+        self.n_qubits = n_qubits
+        self.latent_dim = latent_dim
+        self.circuit_depth = circuit_depth
+        
+        # Classical neural network to process latent vector
+        self.latent_processor = nn.Sequential(
+            nn.Linear(latent_dim, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, n_qubits * 2),  # Output: angles for quantum circuit
+            nn.Tanh()  # Output in [-1, 1] range
+        )
+        
+        # Quantum circuit
+        self.vqc = VQCGenerator(
+            n_qubits=n_qubits,
+            depth=circuit_depth,
+            entanglement=entanglement_type,
+            encoding=encoding_type,
+            noise_model=noise_model,
+            noise_prob=noise_probability
+        )
+        
+    def forward(self, z: torch.Tensor) -> torch.Tensor:
+        """Forward pass through the generator."""
+        # Process latent vector
+        processed_z = self.latent_processor(z)
+        
+        # Convert to numpy for quantum circuit
+        processed_z_np = processed_z.detach().numpy().reshape(-1, self.n_qubits, 2)
+        
+        # Generate samples using quantum circuit
+        samples = []
+        for batch in processed_z_np:
+            # Use angles from classical NN as rotation parameters
+            batch_sample = self.vqc.qnode(self.vqc.params, batch.flatten())
+            samples.append(batch_sample)
+        
+        return torch.tensor(np.array(samples), dtype=torch.float32)
+    
+    def generate(self, n_samples: int = 100) -> torch.Tensor:
+        """Generate samples from random latent vectors."""
+        z = torch.randn(n_samples, self.latent_dim)
+        with torch.no_grad():
+            samples = self.forward(z)
+        return samples
+    
+    def get_state(self) -> np.ndarray:
+        """Get current quantum state."""
+        return self.vqc.get_state()
+
+
+class ClassicalDiscriminator(nn.Module):
+    """Classical discriminator network."""
+    
+    def __init__(self, input_size: int, hidden_dims: List[int], dropout: float = 0.2):
+        super().__init__()
+        
+        layers = []
+        prev_dim = input_size
+        
+        for hidden_dim in hidden_dims:
+            layers.append(nn.Linear(prev_dim, hidden_dim))
+            layers.append(nn.BatchNorm1d(hidden_dim))
+            layers.append(nn.LeakyReLU(0.2))
+            layers.append(nn.Dropout(dropout))
+            prev_dim = hidden_dim
+        
+        # Final layer
+        layers.append(nn.Linear(prev_dim, 1))
+        layers.append(nn.Sigmoid())
+        
+        self.network = nn.Sequential(*layers)
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass through discriminator."""
+        return self.network(x)

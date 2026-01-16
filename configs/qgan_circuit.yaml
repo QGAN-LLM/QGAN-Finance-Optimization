@@ -1,0 +1,68 @@
+# Quantum circuit specific configuration
+
+# Circuit architecture
+circuit:
+  n_qubits: 4
+  depth: 3
+  entanglement: "linear"
+  
+  # Initial state preparation
+  initial_state: "zero"  # zero, plus, random
+  
+  # Measurement basis
+  measurement_basis: "Z"  # Z, X, Y, Pauli-6
+  
+  # Parameter initialization
+  param_init:
+    method: "uniform"  # uniform, normal, xavier
+    range: [0, 2π]
+
+# Ansatz configuration
+ansatz:
+  type: "hardware_efficient"  # hardware_efficient, strongly_entangling
+  layers: 3
+  rotations_per_layer: 3  # RX, RY, RZ per qubit
+  
+  # Entanglement pattern
+  entanglement_pattern: "linear"
+  repeatable: true
+
+# Encoding configuration
+encoding:
+  type: "angle"  # angle, amplitude, basis, iqp
+  features_per_qubit: 1  # for angle encoding
+  reuploading: false  # data re-uploading technique
+  
+  # Normalization
+  normalize: true
+  range: [-1, 1]
+
+# Noise configuration
+noise:
+  model: "depolarizing"  # depolarizing, amplitude_damping, phase_damping
+  probability: 0.01
+  apply_after_gates: true
+  
+  # Error mitigation
+  error_mitigation:
+    enabled: false
+    method: "zne"  # zne, cdr, vncdr
+    scale_factors: [1, 2, 3]
+
+# Optimization
+optimization:
+  optimizer: "adam"
+  learning_rate: 0.001
+  max_iterations: 1000
+  tolerance: 1e-6
+  
+  # Gradient configuration
+  gradient:
+    method: "parameter_shift"  # parameter_shift, finite_diff, adjoint
+    step_size: 0.01
+  
+  # Regularization
+  regularization:
+    enabled: true
+    type: "l2"
+    strength: 0.001

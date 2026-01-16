@@ -1,0 +1,100 @@
+# Experiment parameters for systematic testing
+
+# Experiment grid for hyperparameter search
+grid_search:
+  n_qubits: [2, 4, 6, 8]
+  circuit_depth: [1, 2, 3, 4]
+  entanglement_type: ["linear", "circular"]
+  noise_probability: [0.0, 0.01, 0.05, 0.1]
+  
+  # Training parameters
+  generator_lr: [0.001, 0.0005, 0.0001]
+  discriminator_lr: [0.0002, 0.0001, 0.00005]
+  batch_size: [16, 32, 64]
+
+# Ablation studies
+ablation_studies:
+  - name: "no_quantum"
+    description: "Classical GAN baseline"
+    quantum_enabled: false
+  
+  - name: "no_entanglement"
+    description: "Quantum without entanglement"
+    entanglement_type: "none"
+  
+  - name: "no_noise"
+    description: "Quantum without noise injection"
+    noise_model: null
+  
+  - name: "no_llm"
+    description: "QGAN without LLM enhancement"
+    llm_enabled: false
+
+# Attack scenarios for robustness testing
+attack_scenarios:
+  fgsm:
+    epsilons: [0.01, 0.05, 0.1, 0.2]
+    targeted: [false, true]
+  
+  pgd:
+    epsilons: [0.1, 0.2]
+    iterations: [10, 20, 50]
+    step_size: [0.01, 0.02]
+  
+  data_poisoning:
+    poison_ratios: [0.05, 0.1, 0.2, 0.3]
+    poison_strength: [0.1, 0.3, 0.5]
+
+# Evaluation protocols
+evaluation:
+  # Cross-validation
+  cv_folds: 5
+  cv_strategy: "timeseries"  # timeseries, kfold, stratified
+  
+  # Statistical testing
+  significance_level: 0.05
+  confidence_intervals: 0.95
+  bootstrap_samples: 1000
+  
+  # Performance thresholds
+  thresholds:
+    rmse: 0.1
+    asr: 0.3
+    fid: 50.0
+    latency_ms: 40  # SEC Rule 15c3-5
+  
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 10
+    min_delta: 0.001
+
+# Resource allocation
+resources:
+  # Computational resources
+  max_runtime_hours: 24
+  memory_gb: 16
+  gpu_enabled: true
+  
+  # Cloud resources
+  cloud_provider: null  # aws, gcp, azure
+  instance_type: null
+  
+  # Quantum hardware
+  quantum_backend: "simulator"  # simulator, ibmq, rigetti
+  quantum_time_slots: 4
+
+# Reproducibility
+reproducibility:
+  seed: 42
+  save_checkpoints: true
+  checkpoint_frequency: 10  # epochs
+  
+  # Logging
+  log_level: "INFO"
+  save_artifacts: true
+  artifact_types: ["model", "data", "metrics", "plots"]
+  
+  # Version control
+  git_commit: true
+  docker_container: false
